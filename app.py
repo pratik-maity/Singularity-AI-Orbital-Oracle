@@ -170,6 +170,181 @@
 
 
 
+# import streamlit as st
+# import pickle, numpy as np, pandas as pd
+# import streamlit.components.v1 as components
+
+# st.set_page_config(page_title="Singularity — AI Orbital Oracle", page_icon="🕳️", layout="wide")
+
+# @st.cache_resource
+# def load():
+#     with open("orbit_model.pkl","rb") as f: clf=pickle.load(f)
+#     with open("label_encoder.pkl","rb") as f: le=pickle.load(f)
+#     with open("time_model.pkl","rb") as f: reg=pickle.load(f)
+#     return clf,le,reg
+# clf,le,reg = load()
+
+# if "history" not in st.session_state: st.session_state.history=[]
+
+# # CSS - pro look like PhishGuard
+# st.markdown("""
+# <style>
+# @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+# html,body,[class*="css"]{font-family:'Space Grotesk',sans-serif}
+# .stApp{background:#0a0c12}
+# .hero{padding:20px 0 10px 0}
+# .stat{display:inline-block; background:#141824; border:1px solid #1f2538; padding:8px 14px; border-radius:999px; margin-right:8px; color:#8ea0c2; font-size:13px}
+# .card{background:linear-gradient(180deg,#141824,#0f121b); border:1px solid #1f2538; border-radius:20px; padding:18px}
+# .conf-bar{height:8px; background:#1f2538; border-radius:999px; overflow:hidden}
+# .conf-fill{height:100%; border-radius:999px}
+# </style>
+# <div class="hero">
+# <h1 style="font-size:52px; margin:0; letter-spacing:-1px">🕳️ SINGULARITY</h1>
+# <p style="color:#8ea0c2">AI Orbital Oracle — Cinematic physics + ML. Predicts orbit fate without GPU, APIs, backend.</p>
+# <div><span class="stat">10,000 Sims</span><span class="stat">XGBoost 97.5% Acc</span><span class="stat">MAE 12.1s</span><span class="stat">Pure Pickle Inference</span></div>
+# </div>
+# """, unsafe_allow_html=True)
+
+# c1,c2 = st.columns([0.95,1.45], gap="large")
+
+# with c1:
+#     st.markdown('<div class="card">', unsafe_allow_html=True)
+#     st.markdown("### Mission Control")
+#     bh_mass = st.slider("Black Hole Mass (M☀)", 500, 8000, 4500, 100, help="Horizon = sqrt(M)*0.8+8")
+#     dist = st.slider("Initial Distance (km)", 40, 650, 220, 5)
+#     v_ratio = st.slider("Velocity Ratio", 0.2, 2.2, 1.35, 0.02, help="1.0 = circular orbit")
+#     ang = st.slider("Inclination Noise", -0.6, 0.6, 0.12, 0.02)
+
+#     G=0.5
+#     v_orb=np.sqrt(G*bh_mass/dist)
+#     speed=v_orb*v_ratio
+#     ang_mom=dist*speed*np.cos(ang)
+#     energy=0.5*speed**2 - G*bh_mass/dist
+
+#     X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
+#     pred_enc=clf.predict(X)[0]
+#     proba=clf.predict_proba(X)[0]
+#     fate=le.inverse_transform([pred_enc])[0]
+#     conf=np.max(proba)
+
+#     # order: ESCAPE, STABLE, SWALLOWED from encoder
+#     idx = {n:i for i,n in enumerate(le.classes_)}
+
+#     st.markdown('</div>', unsafe_allow_html=True)
+#     st.markdown('<div class="card" style="margin-top:14px">', unsafe_allow_html=True)
+
+#     color = "#ff4d5e" if fate=="SWALLOWED" else "#4dff9a" if fate=="STABLE" else "#5aa8ff"
+#     icon = "🔴" if fate=="SWALLOWED" else "🟢" if fate=="STABLE" else "🔵"
+#     time_str = f"{reg.predict(X)[0]:.1f}s to swallow" if fate=="SWALLOWED" else "Orbit holds" if fate=="STABLE" else "Will exit gravity well"
+
+#     st.markdown(f"#### {icon} AI Prediction — <span style='color:{color}'>{fate}</span>", unsafe_allow_html=True)
+#     st.markdown(f"<div style='font-size:28px; font-weight:700; color:{color}'>{conf*100:.1f}% confidence</div><div style='color:#8ea0c2'>{time_str}</div>", unsafe_allow_html=True)
+
+#     for cls in ["SWALLOWED","STABLE","ESCAPE"]:
+#         p = proba[idx[cls]]*100 if cls in idx else 0
+#         col = "#ff4d5e" if cls=="SWALLOWED" else "#4dff9a" if cls=="STABLE" else "#5aa8ff"
+#         st.markdown(f"<div style='display:flex; justify-content:space-between; font-size:13px; color:#8ea0c2; margin-top:8px'><span>{cls}</span><span>{p:.1f}%</span></div><div class='conf-bar'><div class='conf-fill' style='width:{p}%; background:{col}'></div></div>", unsafe_allow_html=True)
+
+#     st.markdown(f"<div style='margin-top:12px; color:#5a6a8a; font-size:12px'>Energy {energy:.2f} | L {ang_mom:.0f} | v {speed:.2f}<br>Why? {'Low angular momentum + high mass' if fate=='SWALLOWED' and ang_mom<600 else 'High speed + energy >0' if fate=='ESCAPE' else 'Balanced energy ~0 + high L'}</div>", unsafe_allow_html=True)
+#     st.markdown('</div>', unsafe_allow_html=True)
+
+#     if st.button("📝 Add to Mission Log"):
+#         st.session_state.history.insert(0, {"mass":bh_mass,"dist":dist,"v_ratio":v_ratio,"fate":fate,"conf":f"{conf*100:.0f}%"})
+#         st.session_state.history=st.session_state.history[:8]
+
+# with c2:
+#     # Cinematic canvas - stars + lensing + glow
+#     html = f"""
+#     <div style="position:relative; border-radius:24px; overflow:hidden; border:1px solid #1f2538">
+#     <canvas id="c" width="900" height="620" style="width:100%; background:#05070d"></canvas>
+#     <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.6); padding:8px 12px; border-radius:999px; color:#8ea0c2; font-size:12px">Drag not needed — auto sim proves AI • trail glows • lensing ring</div>
+#     </div>
+#     <script>
+#     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+#     const W=900,H=620,CX=450,CY=310;
+#     let bh={bh_mass}, dist={dist}, vr={v_ratio}, ang={ang};
+#     let G=0.5, x=CX+dist, y=CY, v_orb=Math.sqrt(G*bh/dist), vx=Math.cos(Math.PI/2+ang)*v_orb*vr, vy=Math.sin(Math.PI/2+ang)*v_orb*vr;
+#     let trail=[], stars=[];
+#     for(let i=0;i<180;i++) stars.push([Math.random()*W, Math.random()*H, Math.random()*1.2]);
+#     let h=Math.sqrt(bh)*0.8+8;
+#     function drawBH(){{
+#         // accretion glow
+#         let g=ctx.createRadialGradient(CX,CY,h-2,CX,CY,h+42);
+#         g.addColorStop(0,'rgba(120,140,255,0.9)'); g.addColorStop(0.2,'rgba(100,110,255,0.5)'); g.addColorStop(0.6,'rgba(60,90,180,0.15)'); g.addColorStop(1,'rgba(0,0,0,0)');
+#         ctx.fillStyle=g; ctx.beginPath(); ctx.arc(CX,CY,h+42,0,Math.PI*2); ctx.fill();
+#         // BH core + lensing
+#         ctx.beginPath(); ctx.arc(CX,CY,h,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill();
+#         ctx.lineWidth=2; ctx.strokeStyle='rgba(140,160,255,0.8)'; ctx.stroke();
+#     }}
+#     function loop(){{
+#         let rx=x-CX, ry=y-CY, r=Math.hypot(rx,ry);
+#         if(r<h){{ ctx.fillStyle='rgba(255,60,80,0.15)'; ctx.fillRect(0,0,W,H); return; }}
+#         if(r>950){{ return; }}
+#         let a=G*bh/(r*r*r)*0.35;
+#         vx-=rx*a*12; vy-=ry*a*12; x+=vx; y+=vy;
+#         trail.push([x,y, r]); if(trail.length>600) trail.shift();
+#         // fade
+#         ctx.fillStyle='rgba(5,7,13,0.22)'; ctx.fillRect(0,0,W,H);
+#         // stars with lensing warp near BH
+#         for(let s of stars){{
+#           let dx=s[0]-CX, dy=s[1]-CY, sr=Math.hypot(dx,dy);
+#           let warp = sr>10? Math.max(0, 12*h*h/(sr*sr*sr)) : 0;
+#           let sx=s[0]+dx*warp*0.08, sy=s[1]+dy*warp*0.08;
+#           ctx.fillStyle='rgba(200,220,255,'+(0.3+s[2]*0.3)+')'; ctx.fillRect(sx,sy,1.2,1.2);
+#         }}
+#         drawBH();
+#         // trail with glow
+#         for(let i=1;i<trail.length;i++){{
+#           let alpha=i/trail.length; let [x1,y1]=trail[i-1], [x2,y2]=trail[i];
+#           ctx.strokeStyle=`rgba(255,${{210+alpha*40}},${{80+alpha*120}},${{0.15+alpha*0.85}})`;
+#           ctx.lineWidth=1+alpha*2; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+#         }}
+#         // planet
+#         ctx.shadowBlur=12; ctx.shadowColor='#ffde7a'; ctx.beginPath(); ctx.arc(x,y,4.5,0,Math.PI*2); ctx.fillStyle='#ffde7a'; ctx.fill(); ctx.shadowBlur=0;
+#         requestAnimationFrame(loop);
+#     }}
+#     loop();
+#     </script>
+#     """
+#     components.html(html, height=650)
+
+# # bottom rows
+# st.markdown("---")
+# b1,b2,b3 = st.columns([1,1,1])
+# with b1:
+#     st.markdown('<div class="card"><h4>🧠 Why AI said '+fate+'</h4><p style="color:#8ea0c2; font-size:13px">Energy '+f'{"<0 → bound" if energy<0 else ">0 → escape"}'+f' | L {"low → fall" if abs(ang_mom)<500 else "high → stable"}<br>Model uses v_ratio + ang_mom + energy (physics-informed) — same as Interstellar paper.</p></div>', unsafe_allow_html=True)
+# with b2:
+#     st.markdown('<div class="card"><h4>📜 Mission Log</h4>', unsafe_allow_html=True)
+#     if st.session_state.history:
+#         st.dataframe(pd.DataFrame(st.session_state.history), hide_index=True, use_container_width=True)
+#     else:
+#         st.caption("Launch to log orbits")
+#     st.markdown('</div>', unsafe_allow_html=True)
+# with b3:
+#     st.markdown('<div class="card"><h4>📊 Resume Proof</h4><p style="color:#8ea0c2; font-size:13px">• Dataset: 10k sims, 3 classes<br>• XGB 97.5% | MAE 12s<br>• Features: bh_mass, dist, speed, v_ratio, ang_mom, energy<br>• No GPU / API / backend — pure pickle<br>• Explainability via proba bars + physics why</p></div>', unsafe_allow_html=True)
+
+# st.caption("Singularity V2 — Built for interview differentiation. UI = product, ML = feature.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import streamlit as st
 import pickle, numpy as np, pandas as pd
 import streamlit.components.v1 as components
@@ -186,7 +361,6 @@ clf,le,reg = load()
 
 if "history" not in st.session_state: st.session_state.history=[]
 
-# CSS - pro look like PhishGuard
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
@@ -200,7 +374,7 @@ html,body,[class*="css"]{font-family:'Space Grotesk',sans-serif}
 </style>
 <div class="hero">
 <h1 style="font-size:52px; margin:0; letter-spacing:-1px">🕳️ SINGULARITY</h1>
-<p style="color:#8ea0c2">AI Orbital Oracle — Cinematic physics + ML. Predicts orbit fate without GPU, APIs, backend.</p>
+<p style="color:#8ea0c2">AI Orbital Oracle — Interstellar physics + ML. Predicts orbit fate without GPU, APIs, backend.</p>
 <div><span class="stat">10,000 Sims</span><span class="stat">XGBoost 97.5% Acc</span><span class="stat">MAE 12.1s</span><span class="stat">Pure Pickle Inference</span></div>
 </div>
 """, unsafe_allow_html=True)
@@ -210,109 +384,116 @@ c1,c2 = st.columns([0.95,1.45], gap="large")
 with c1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("### Mission Control")
-    bh_mass = st.slider("Black Hole Mass (M☀)", 500, 8000, 4500, 100, help="Horizon = sqrt(M)*0.8+8")
+    bh_mass = st.slider("Black Hole Mass (M☀)", 500, 8000, 4500, 100)
     dist = st.slider("Initial Distance (km)", 40, 650, 220, 5)
     v_ratio = st.slider("Velocity Ratio", 0.2, 2.2, 1.35, 0.02, help="1.0 = circular orbit")
     ang = st.slider("Inclination Noise", -0.6, 0.6, 0.12, 0.02)
-
     G=0.5
     v_orb=np.sqrt(G*bh_mass/dist)
     speed=v_orb*v_ratio
     ang_mom=dist*speed*np.cos(ang)
     energy=0.5*speed**2 - G*bh_mass/dist
-
     X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
     pred_enc=clf.predict(X)[0]
     proba=clf.predict_proba(X)[0]
     fate=le.inverse_transform([pred_enc])[0]
     conf=np.max(proba)
-
-    # order: ESCAPE, STABLE, SWALLOWED from encoder
     idx = {n:i for i,n in enumerate(le.classes_)}
-
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="card" style="margin-top:14px">', unsafe_allow_html=True)
-
     color = "#ff4d5e" if fate=="SWALLOWED" else "#4dff9a" if fate=="STABLE" else "#5aa8ff"
     icon = "🔴" if fate=="SWALLOWED" else "🟢" if fate=="STABLE" else "🔵"
-    time_str = f"{reg.predict(X)[0]:.1f}s to swallow" if fate=="SWALLOWED" else "Orbit holds" if fate=="STABLE" else "Will exit gravity well"
-
+    time_str = f"{reg.predict(X)[0]:.1f}s to swallow" if fate=="SWALLOWED" else "Orbit holds — stable" if fate=="STABLE" else "Will escape gravity well"
     st.markdown(f"#### {icon} AI Prediction — <span style='color:{color}'>{fate}</span>", unsafe_allow_html=True)
     st.markdown(f"<div style='font-size:28px; font-weight:700; color:{color}'>{conf*100:.1f}% confidence</div><div style='color:#8ea0c2'>{time_str}</div>", unsafe_allow_html=True)
-
     for cls in ["SWALLOWED","STABLE","ESCAPE"]:
         p = proba[idx[cls]]*100 if cls in idx else 0
         col = "#ff4d5e" if cls=="SWALLOWED" else "#4dff9a" if cls=="STABLE" else "#5aa8ff"
         st.markdown(f"<div style='display:flex; justify-content:space-between; font-size:13px; color:#8ea0c2; margin-top:8px'><span>{cls}</span><span>{p:.1f}%</span></div><div class='conf-bar'><div class='conf-fill' style='width:{p}%; background:{col}'></div></div>", unsafe_allow_html=True)
-
-    st.markdown(f"<div style='margin-top:12px; color:#5a6a8a; font-size:12px'>Energy {energy:.2f} | L {ang_mom:.0f} | v {speed:.2f}<br>Why? {'Low angular momentum + high mass' if fate=='SWALLOWED' and ang_mom<600 else 'High speed + energy >0' if fate=='ESCAPE' else 'Balanced energy ~0 + high L'}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='margin-top:12px; color:#5a6a8a; font-size:12px'>Energy {energy:.2f} | L {ang_mom:.0f} | v {speed:.2f}<br>Why? {'Low angular momentum + high mass → fall' if fate=='SWALLOWED' and ang_mom<600 else 'High speed + energy >0 → escape' if fate=='ESCAPE' else 'Balanced energy ~0 + high L → stable'}</div>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
-
     if st.button("📝 Add to Mission Log"):
         st.session_state.history.insert(0, {"mass":bh_mass,"dist":dist,"v_ratio":v_ratio,"fate":fate,"conf":f"{conf*100:.0f}%"})
         st.session_state.history=st.session_state.history[:8]
 
 with c2:
-    # Cinematic canvas - stars + lensing + glow
     html = f"""
-    <div style="position:relative; border-radius:24px; overflow:hidden; border:1px solid #1f2538">
-    <canvas id="c" width="900" height="620" style="width:100%; background:#05070d"></canvas>
-    <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.6); padding:8px 12px; border-radius:999px; color:#8ea0c2; font-size:12px">Drag not needed — auto sim proves AI • trail glows • lensing ring</div>
+    <div style="position:relative; border-radius:24px; overflow:hidden; border:1px solid #1f2538; background:#000">
+    <canvas id="c" width="900" height="620" style="width:100%; background:#000"></canvas>
+    <div style="position:absolute; top:14px; left:14px; background:rgba(10,14,24,0.75); backdrop-filter:blur(10px); padding:8px 14px; border-radius:999px; color:#8ea0c2; font-size:11px; border:1px solid #1f2538">● LIVE — Lensing • Doppler disk • 350 stars • No GPU</div>
+    <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.6); padding:8px 12px; border-radius:999px; color:#8ea0c2; font-size:11px">Interstellar-grade: stars bend, disk spins, photon ring glows</div>
     </div>
     <script>
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const W=900,H=620,CX=450,CY=310;
     let bh={bh_mass}, dist={dist}, vr={v_ratio}, ang={ang};
-    let G=0.5, x=CX+dist, y=CY, v_orb=Math.sqrt(G*bh/dist), vx=Math.cos(Math.PI/2+ang)*v_orb*vr, vy=Math.sin(Math.PI/2+ang)*v_orb*vr;
-    let trail=[], stars=[];
-    for(let i=0;i<180;i++) stars.push([Math.random()*W, Math.random()*H, Math.random()*1.2]);
+    let G=0.5;
+    let x=CX+dist, y=CY, v_orb=Math.sqrt(G*bh/dist), vx=Math.cos(Math.PI/2+ang)*v_orb*vr, vy=Math.sin(Math.PI/2+ang)*v_orb*vr;
+    let trail=[], stars=[], diskParts=[];
+    for(let i=0;i<350;i++) stars.push({{x:Math.random()*W, y:Math.random()*H, b:Math.random()}});
+    for(let i=0;i<140;i++){{ let r= 28 + Math.random()*72; let a=Math.random()*Math.PI*2; diskParts.push({{r,a,spd: 0.015+ 1.6/r}}); }}
     let h=Math.sqrt(bh)*0.8+8;
-    function drawBH(){{
-        // accretion glow
-        let g=ctx.createRadialGradient(CX,CY,h-2,CX,CY,h+42);
-        g.addColorStop(0,'rgba(120,140,255,0.9)'); g.addColorStop(0.2,'rgba(100,110,255,0.5)'); g.addColorStop(0.6,'rgba(60,90,180,0.15)'); g.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(CX,CY,h+42,0,Math.PI*2); ctx.fill();
-        // BH core + lensing
-        ctx.beginPath(); ctx.arc(CX,CY,h,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill();
-        ctx.lineWidth=2; ctx.strokeStyle='rgba(140,160,255,0.8)'; ctx.stroke();
+    function lens(px,py){{
+      let dx=px-CX, dy=py-CY, d2=dx*dx+dy*dy;
+      if(d2<16) return {{x:px,y:py}};
+      let bend = (h*h*2.2)/Math.max(d2, 100);
+      return {{x: px + dx*bend*0.22, y: py + dy*bend*0.22}};
     }}
-    function loop(){{
-        let rx=x-CX, ry=y-CY, r=Math.hypot(rx,ry);
-        if(r<h){{ ctx.fillStyle='rgba(255,60,80,0.15)'; ctx.fillRect(0,0,W,H); return; }}
-        if(r>950){{ return; }}
-        let a=G*bh/(r*r*r)*0.35;
-        vx-=rx*a*12; vy-=ry*a*12; x+=vx; y+=vy;
-        trail.push([x,y, r]); if(trail.length>600) trail.shift();
-        // fade
-        ctx.fillStyle='rgba(5,7,13,0.22)'; ctx.fillRect(0,0,W,H);
-        // stars with lensing warp near BH
-        for(let s of stars){{
-          let dx=s[0]-CX, dy=s[1]-CY, sr=Math.hypot(dx,dy);
-          let warp = sr>10? Math.max(0, 12*h*h/(sr*sr*sr)) : 0;
-          let sx=s[0]+dx*warp*0.08, sy=s[1]+dy*warp*0.08;
-          ctx.fillStyle='rgba(200,220,255,'+(0.3+s[2]*0.3)+')'; ctx.fillRect(sx,sy,1.2,1.2);
+    function draw(){{
+      ctx.fillStyle='rgba(0,0,0,0.20)'; ctx.fillRect(0,0,W,H);
+      for(let s of stars){{
+        let p=lens(s.x,s.y);
+        let alpha = 0.15 + s.b*0.75;
+        ctx.fillStyle=`rgba(190,210,255,${{alpha}})`;
+        ctx.fillRect(p.x, p.y, 1.3, 1.3);
+      }}
+      for(let d of diskParts){{
+        d.a+=d.spd;
+        let x0=CX+Math.cos(d.a)*d.r, y0=CY+Math.sin(d.a)*d.r*0.36;
+        let p=lens(x0,y0);
+        let doppler = Math.sin(d.a);
+        let rcol = doppler>0? 255 : 90;
+        let bcol = doppler>0? 100 : 255;
+        let alpha = 0.22 + Math.abs(doppler)*0.65;
+        if(Math.hypot(p.x-CX,p.y-CY) > h+1.5){{
+          ctx.fillStyle=`rgba(${{rcol}},${{150}},${{bcol}},${{alpha}})`;
+          ctx.fillRect(p.x, p.y, 2.2, 1.3);
         }}
-        drawBH();
-        // trail with glow
-        for(let i=1;i<trail.length;i++){{
-          let alpha=i/trail.length; let [x1,y1]=trail[i-1], [x2,y2]=trail[i];
-          ctx.strokeStyle=`rgba(255,${{210+alpha*40}},${{80+alpha*120}},${{0.15+alpha*0.85}})`;
-          ctx.lineWidth=1+alpha*2; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-        }}
-        // planet
-        ctx.shadowBlur=12; ctx.shadowColor='#ffde7a'; ctx.beginPath(); ctx.arc(x,y,4.5,0,Math.PI*2); ctx.fillStyle='#ffde7a'; ctx.fill(); ctx.shadowBlur=0;
-        requestAnimationFrame(loop);
+      }}
+      let grad=ctx.createRadialGradient(CX,CY,h,CX,CY,h+26);
+      grad.addColorStop(0,'rgba(120,140,255,0.0)'); grad.addColorStop(0.25,'rgba(100,120,255,0.85)'); grad.addColorStop(0.6,'rgba(70,90,200,0.25)'); grad.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(CX,CY,h+26,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(CX,CY,h,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill();
+      ctx.strokeStyle='rgba(140,160,255,0.4)'; ctx.lineWidth=1.1; ctx.stroke();
+
+      let rx=x-CX, ry=y-CY, r=Math.hypot(rx,ry);
+      if(r<h || r>1300) return;
+      let a=G*bh/(r*r*r)*0.44;
+      vx-=rx*a*10; vy-=ry*a*10; x+=vx; y+=vy;
+      trail.push([x,y]); if(trail.length>750) trail.shift();
+
+      for(let i=1;i<trail.length;i++){{
+        let t=i/trail.length;
+        let lp=lens(trail[i][0],trail[i][1]);
+        ctx.strokeStyle=`rgba(255,${{215+t*35}},${{50+t*90}},${{0.08+t*0.92}})`;
+        ctx.lineWidth=0.4+t*2.4; ctx.beginPath(); ctx.moveTo(trail[i-1][0],trail[i-1][1]); ctx.lineTo(lp.x,lp.y); ctx.stroke();
+      }}
+      let behind = r>h && Math.abs(rx)<h*1.2 && ry>0;
+      let lp2=lens(x,y);
+      ctx.shadowBlur=20; ctx.shadowColor='#ffde7a'; ctx.beginPath(); ctx.arc(lp2.x,lp2.y, behind?2.2:4.8,0,Math.PI*2);
+      ctx.fillStyle=behind? 'rgba(255,222,122,0.28)' : '#ffde7a'; ctx.fill(); ctx.shadowBlur=0;
+      requestAnimationFrame(draw);
     }}
-    loop();
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+    draw();
     </script>
     """
     components.html(html, height=650)
 
-# bottom rows
 st.markdown("---")
 b1,b2,b3 = st.columns([1,1,1])
 with b1:
-    st.markdown('<div class="card"><h4>🧠 Why AI said '+fate+'</h4><p style="color:#8ea0c2; font-size:13px">Energy '+f'{"<0 → bound" if energy<0 else ">0 → escape"}'+f' | L {"low → fall" if abs(ang_mom)<500 else "high → stable"}<br>Model uses v_ratio + ang_mom + energy (physics-informed) — same as Interstellar paper.</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="card"><h4>🧠 Why AI said {fate}</h4><p style="color:#8ea0c2; font-size:13px">Energy {"<0 → bound" if energy<0 else ">0 → escape"} | L {"low → fall" if abs(ang_mom)<500 else "high → stable"}<br>Model uses v_ratio + ang_mom + energy — physics-informed, same features as Interstellar paper.</p></div>', unsafe_allow_html=True)
 with b2:
     st.markdown('<div class="card"><h4>📜 Mission Log</h4>', unsafe_allow_html=True)
     if st.session_state.history:
@@ -321,6 +502,6 @@ with b2:
         st.caption("Launch to log orbits")
     st.markdown('</div>', unsafe_allow_html=True)
 with b3:
-    st.markdown('<div class="card"><h4>📊 Resume Proof</h4><p style="color:#8ea0c2; font-size:13px">• Dataset: 10k sims, 3 classes<br>• XGB 97.5% | MAE 12s<br>• Features: bh_mass, dist, speed, v_ratio, ang_mom, energy<br>• No GPU / API / backend — pure pickle<br>• Explainability via proba bars + physics why</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="card"><h4>📊 Resume Proof</h4><p style="color:#8ea0c2; font-size:13px">• 10k sims, 3 classes (STABLE 71%, SWALLOWED 25%, ESCAPE 3%)<br>• XGB 97.5% | MAE 12s<br>• No GPU/API/backend — pure pickle<br>• Lensing + Doppler = interview differentiator</p></div>', unsafe_allow_html=True)
 
-st.caption("Singularity V2 — Built for interview differentiation. UI = product, ML = feature.")
+st.caption("Singularity V3 — Interstellar-grade sim on Streamlit free tier.")
