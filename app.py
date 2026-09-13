@@ -3841,7 +3841,7 @@ with right:
     param_block("photon","Photon Ring",0.0,1.0,0.05,"photon")
     st.markdown('<div style="margin-top:10px;padding:10px;background:#11162a;border:1px solid #2a3555;border-radius:12px">',unsafe_allow_html=True)
     cL,cQ=st.columns([0.78,0.22])
-    cL.markdown("**🌀 Binary Ring (B7)**")
+    cL.markdown("**🌀 Binary Ring ()**")
     if cQ.button("?", key="q_binary"):
         st.session_state["q_binary"]=not st.session_state.get("q_binary",False)
     if st.session_state.get("q_binary"):
