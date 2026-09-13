@@ -4039,4 +4039,4 @@ with cA2:
       </div>
     </div>
     ''', unsafe_allow_html=True)
-st.caption("V6.7 | Title styled + Side cards animated | Free Play fixed | Fullscreen restored")
+#st.caption("V6.7 | Title styled + Side cards animated | Free Play fixed | Fullscreen restored")
