@@ -1306,8 +1306,135 @@
 
 # v5.3
 
+# import streamlit as st, pickle, numpy as np, pandas as pd, streamlit.components.v1 as components, json
+# st.set_page_config(page_title="Singularity V5.3", page_icon="🕳️", layout="wide")
+# @st.cache_resource
+# def load():
+#     with open("orbit_model.pkl","rb") as f: clf=pickle.load(f)
+#     with open("label_encoder.pkl","rb") as f: le=pickle.load(f)
+#     with open("time_model.pkl","rb") as f: reg=pickle.load(f)
+#     return clf,le,reg
+# clf,le,reg=load()
+# if "cfg" not in st.session_state:
+#     st.session_state.cfg=dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0)
+# if "info" not in st.session_state: st.session_state.info=None
+# if "history" not in st.session_state: st.session_state.history=[]
+
+# infos={"mass":"Mass controls gravity.","dist":"Initial Distance: start radius.","v_ratio":"1.0=circular. <1 fall, >1.4 escape.","ang":"Tilt changes L.","spin":"Kerr Spin 0-0.99 warps lensing.","thick":"Disk Thickness thin vs puffy.","bright":"Doppler multiplier.","incl":"0 top view, 1 edge.","star":"Background stars.","photon":"Einstein ring glow.","binary":"Second BH — chaotic.","thrust":"Mid-flight kick."}
+# demo_desc={"🌌 Gargantua (Edge)":"Nolan's Gargantua 7200 M☀ spin 0.9 edge-on. Expect STABLE.","💫 Binary Dance":"Two BHs 5000+3000 chaotic. No analytic solution.","🚀 Escape Slingshot":"v_ratio 1.65 close 180 — should ESCAPE.","🔴 Swallow":"Low v 0.55 dist 120 — should SWALLOWED.","🎮 Free Play":"Your lab — drag, thrust, fullscreen."}
+# presets={
+#  "🌌 Gargantua (Edge)": dict(mass=7200,dist=280,v_ratio=0.92,ang=0.05,spin=0.9,incl=0.85,binary=False,thick=0.36,bright=1.3,star=280,photon=0.9,thrust=0.0),
+#  "💫 Binary Dance": dict(mass=5000,dist=380,v_ratio=1.15,ang=0.22,spin=0.6,incl=0.4,binary=True,thick=0.4,bright=0.9,star=350,photon=0.8,thrust=0.0),
+#  "🚀 Escape Slingshot": dict(mass=3200,dist=180,v_ratio=1.65,ang=-0.15,spin=0.3,incl=0.2,binary=False,thick=0.3,bright=0.9,star=250,photon=0.6,thrust=0.0),
+#  "🔴 Swallow": dict(mass=6800,dist=120,v_ratio=0.55,ang=0.3,spin=0.95,incl=0.6,binary=False,thick=0.5,bright=0.9,star=280,photon=1.2,thrust=0.0),
+#  "🎮 Free Play": dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0),
+# }
+# def apply_preset(name):
+#     p=presets[name]
+#     st.session_state.cfg=p.copy()
+#     for k,v in [("s_mass",p["mass"]),("s_dist",p["dist"]),("s_v_ratio",p["v_ratio"]),("s_ang",p["ang"]),("s_spin",p["spin"]),("s_thick",p["thick"]),("s_bright",p["bright"]),("s_incl",p["incl"]),("s_star",p["star"]),("s_photon",p["photon"]),("s_thrust",p["thrust"]),("bin",p["binary"])]:
+#         st.session_state[k]=v
+
+# @st.dialog("Mission Briefing — ESC to close")
+# def demo_dialog(name):
+#     st.write(f"**{name}**\n\n{demo_desc[name]}")
+#     st.code(str(presets[name]))
+#     if st.button("🚀 Launch", use_container_width=True, key=f"launch_{name}"):
+#         apply_preset(name)
+#         st.rerun()
+#     if st.button("Cancel", use_container_width=True, key=f"cancel_{name}"):
+#         st.rerun()
+
+# st.markdown("""<style>.stApp{background:#06080f}.card{background:#121624;border:1px solid #1f2742;border-radius:16px;padding:14px;margin-bottom:12px}.infoBox{background:#1a2138;border:1px solid #2a3555;border-radius:10px;padding:8px 10px;margin:6px 0;color:#a8b4cf;font-size:12px}.sticky{position:sticky;top:12px}.h1{font-size:50px;text-align:center}</style><div class="h1">🕳️ SINGULARITY V5.3</div>""", unsafe_allow_html=True)
+# cols=st.columns(5)
+# for i,n in enumerate(presets):
+#     if cols[i].button(n, use_container_width=True, key=f"btn_{n}"):
+#         demo_dialog(n)
+
+# def param_block(label,key,min_v,max_v,step,cfg_key):
+#     cL,cQ=st.columns([0.88,0.12])
+#     cL.markdown(f"**{label}**")
+#     if cQ.button("?", key=f"q_{key}"):
+#         st.session_state.info=None if st.session_state.info==key else key
+#     if st.session_state.info==key:
+#         st.markdown(f'<div class="infoBox">ℹ️ {infos[key]}</div>', unsafe_allow_html=True)
+#     val=st.slider(" ", min_v, max_v, st.session_state.cfg[cfg_key], step, key=f"s_{key}", label_visibility="collapsed")
+#     st.session_state.cfg[cfg_key]=val
+#     return val
+
+# c1,c2=st.columns([0.92,1.58],gap="large")
+# with c1:
+#     st.markdown('<div class="card">',unsafe_allow_html=True)
+#     bh_mass=param_block("Black Hole Mass M☀","mass",500,8000,100,"mass")
+#     dist=param_block("Initial Distance","dist",40,650,5,"dist")
+#     v_ratio=param_block("Velocity Ratio","v_ratio",0.2,2.2,0.02,"v_ratio")
+#     ang=param_block("Inclination Noise","ang",-0.6,0.6,0.02,"ang")
+#     st.markdown('</div><div class="card">',unsafe_allow_html=True)
+#     spin=param_block("Kerr Spin","spin",0.0,0.99,0.05,"spin")
+#     disk_thick=param_block("Disk Thickness","thick",0.15,1.2,0.05,"thick")
+#     disk_bright=param_block("Disk Brightness","bright",0.2,1.5,0.1,"bright")
+#     incl=param_block("Observer Inclination","incl",0.0,1.0,0.05,"incl")
+#     star_dens=param_block("Starfield Density","star",50,500,10,"star")
+#     photon=param_block("Photon Ring","photon",0.0,1.5,0.05,"photon")
+#     thrust=param_block("Fuel Thrust","thrust",0.0,1.5,0.05,"thrust")
+#     cL,cQ=st.columns([0.88,0.12]); cL.markdown("**Binary BH**")
+#     if cQ.button("?", key="q_binary"): st.session_state.info=None if st.session_state.info=="binary" else "binary"
+#     if st.session_state.info=="binary": st.markdown(f'<div class="infoBox">ℹ️ {infos["binary"]}</div>', unsafe_allow_html=True)
+#     binary=st.checkbox("Enable Binary", value=st.session_state.cfg["binary"], key="bin")
+#     st.session_state.cfg["binary"]=binary
+#     st.markdown('</div>',unsafe_allow_html=True)
+#     G=0.5; v_orb=np.sqrt(G*bh_mass/dist); speed=v_orb*v_ratio; ang_mom=dist*speed*np.cos(ang); energy=0.5*speed**2 - G*bh_mass/dist
+#     X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
+#     pred_enc=clf.predict(X)[0]; proba=clf.predict_proba(X)[0]; fate=le.inverse_transform([pred_enc])[0]; conf=float(np.max(proba))
+#     st.markdown(f'<div class="card"><h4>🤖 {fate} {conf*100:.0f}%</h4></div>',unsafe_allow_html=True)
+
+# with c2:
+#     st.markdown('<div class="sticky">',unsafe_allow_html=True)
+#     html_template="""
+#     <div id="wrap" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid #1f2742;background:#000">
+#     <canvas id="c" width="920" height="680" style="width:100%;background:#000"></canvas>
+#     <button id="fs" style="position:absolute;top:10px;right:10px;background:#121624;border:1px solid #2a3555;color:#8ea0c2;padding:6px 10px;border-radius:999px;font-size:11px;cursor:pointer">⛶ Fullscreen (ESC)</button>
+#     </div><script>
+#     const CFG=JSON.parse('CFG_JSON');
+#     const W=920,H=680,CX=460,CY=340, canvas=document.getElementById('c'), ctx=canvas.getContext('2d'), wrap=document.getElementById('wrap');
+#     let bh=CFG.mass,dist=CFG.dist,vr=CFG.v_ratio,ang=CFG.ang,spin=CFG.spin,incl=CFG.incl,thick=CFG.thick,bright=CFG.bright,starN=CFG.star,phot=CFG.photon,binary=CFG.binary;
+#     let G=0.5,x=CX+dist,y=CY,v_orb=Math.sqrt(G*bh/dist),vx=Math.cos(Math.PI/2+ang)*v_orb*vr,vy=Math.sin(Math.PI/2+ang)*v_orb*vr,trail=[],stars=[],disk=[];
+#     for(let i=0;i<starN;i++) stars.push({x:Math.random()*W,y:Math.random()*H,b:Math.random()});
+#     for(let i=0;i<150;i++){let r=30+Math.random()*88;disk.push({r:r,a:Math.random()*6.28,spd:0.012+(1.8+spin*1.2)/r});}
+#     let h=Math.sqrt(bh)*0.8+8+spin*6,h2=h*0.62,bh2x=CX-220,bh2y=CY-80;
+#     function lens(px,py,cx,cy,hh){let dx=px-cx,dy=py-cy,d2=dx*dx+dy*dy;if(d2<25)return{x:px,y:py};let bend=(hh*hh*2.4+spin*80)/Math.max(d2,110);return{x:px+dx*bend*0.26,y:py+dy*bend*0.26*(0.6+incl*0.6)};}
+#     document.getElementById('fs').onclick=()=>wrap.requestFullscreen();
+#     let dragging=false,s=null;canvas.addEventListener('mousedown',e=>{dragging=true;s={x:e.offsetX,y:e.offsetY};});canvas.addEventListener('mouseup',e=>{if(!dragging)return;dragging=false;let dx=e.offsetX-s.x,dy=e.offsetY-s.y;vx+=dx*0.02;vy+=dy*0.02;});
+#     function draw(){ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(0,0,W,H);for(let s of stars){let p=lens(s.x,s.y,CX,CY,h);if(binary){let p2=lens(p.x,p.y,bh2x,bh2y,h2);p=p2;}ctx.fillStyle='rgba(180,200,255,'+(0.1+s.b*0.7)+')';ctx.fillRect(p.x,p.y,1.2,1.2);}for(let d of disk){d.a+=d.spd;let x0=CX+Math.cos(d.a)*d.r,y0=CY+Math.sin(d.a)*d.r*thick*incl;let p=lens(x0,y0,CX,CY,h);if(Math.hypot(p.x-CX,p.y-CY)>h+1){ctx.fillStyle='rgba('+(Math.sin(d.a+spin)>0?255:80)+',150,'+(Math.sin(d.a+spin)>0?90:255)+','+(0.18*bright+0.4)+')';ctx.fillRect(p.x,p.y,2,1);}}let grad=ctx.createRadialGradient(CX,CY,h,CX,CY,h+26*phot);grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(0.3,'rgba(110,130,255,'+(0.8*phot)+')');grad.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(CX,CY,h+26*phot,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(CX,CY,h,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(130,150,255,0.5)';ctx.stroke();if(binary){ctx.beginPath();ctx.arc(bh2x,bh2y,h2,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(180,130,255,0.4)';ctx.stroke();}let rx=x-CX,ry=y-CY,r=Math.hypot(rx,ry);if(r<h)return;let a=G*bh/(r*r*r)*0.46;vx-=rx*a*10;vy-=ry*a*10;x+=vx;y+=vy;trail.push([x,y]);if(trail.length>800)trail.shift();for(let i=1;i<trail.length;i++){let t=i/trail.length;let lp=lens(trail[i][0],trail[i][1],CX,CY,h);if(binary)lp=lens(lp.x,lp.y,bh2x,bh2y,h2);ctx.strokeStyle='rgba(255,'+(210+t*40)+','+(40+t*80)+','+(0.08+t*0.9)+')';ctx.lineWidth=0.3+t*2.4;ctx.beginPath();ctx.moveTo(trail[i-1][0],trail[i-1][1]);ctx.lineTo(lp.x,lp.y);ctx.stroke();}let p2=lens(x,y,CX,CY,h);if(binary)p2=lens(p2.x,p2.y,bh2x,bh2y,h2);ctx.shadowBlur=18;ctx.shadowColor='#ffde7a';ctx.beginPath();ctx.arc(p2.x,p2.y,4.5,0,6.28);ctx.fillStyle='#ffde7a';ctx.fill();ctx.shadowBlur=0;requestAnimationFrame(draw);}ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);draw();
+#     </script>
+#     """
+#     html_final=html_template.replace("CFG_JSON", json.dumps(st.session_state.cfg))
+#     components.html(html_final, height=700)
+#     st.markdown('</div>',unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# v-6.0 - Whiteboard Layout: centered cockpit + dual side params + 3 aesthetic verdict cards + pill value badges
+# CHANGES: Symmetrical 3-col layout (left physics | center canvas | right cinematic), binary checkbox removed (demo-driven), aesthetic verdict cards (AI Proof | Singularity Core | Mission Console), pill value badge for slider visibility, inline ? infoBox retained, CFG_JSON injection retained
+
 import streamlit as st, pickle, numpy as np, pandas as pd, streamlit.components.v1 as components, json
-st.set_page_config(page_title="Singularity V5.3", page_icon="🕳️", layout="wide")
+st.set_page_config(page_title="Singularity V5.3", page_icon="ðŸ•³ï¸", layout="wide")
 @st.cache_resource
 def load():
     with open("orbit_model.pkl","rb") as f: clf=pickle.load(f)
@@ -1320,14 +1447,14 @@ if "cfg" not in st.session_state:
 if "info" not in st.session_state: st.session_state.info=None
 if "history" not in st.session_state: st.session_state.history=[]
 
-infos={"mass":"Mass controls gravity.","dist":"Initial Distance: start radius.","v_ratio":"1.0=circular. <1 fall, >1.4 escape.","ang":"Tilt changes L.","spin":"Kerr Spin 0-0.99 warps lensing.","thick":"Disk Thickness thin vs puffy.","bright":"Doppler multiplier.","incl":"0 top view, 1 edge.","star":"Background stars.","photon":"Einstein ring glow.","binary":"Second BH — chaotic.","thrust":"Mid-flight kick."}
-demo_desc={"🌌 Gargantua (Edge)":"Nolan's Gargantua 7200 M☀ spin 0.9 edge-on. Expect STABLE.","💫 Binary Dance":"Two BHs 5000+3000 chaotic. No analytic solution.","🚀 Escape Slingshot":"v_ratio 1.65 close 180 — should ESCAPE.","🔴 Swallow":"Low v 0.55 dist 120 — should SWALLOWED.","🎮 Free Play":"Your lab — drag, thrust, fullscreen."}
+infos={"mass":"Mass controls gravity.","dist":"Initial Distance: start radius.","v_ratio":"1.0=circular. <1 fall, >1.4 escape.","ang":"Tilt changes L.","spin":"Kerr Spin 0-0.99 warps lensing.","thick":"Disk Thickness thin vs puffy.","bright":"Doppler multiplier.","incl":"0 top view, 1 edge.","star":"Background stars.","photon":"Einstein ring glow.","binary":"Second BH â€” chaotic.","thrust":"Mid-flight kick."}
+demo_desc={"ðŸŒŒ Gargantua (Edge)":"Nolan's Gargantua 7200 Mâ˜€ spin 0.9 edge-on. Expect STABLE.","ðŸ’« Binary Dance":"Two BHs 5000+3000 chaotic. No analytic solution.","ðŸš€ Escape Slingshot":"v_ratio 1.65 close 180 â€” should ESCAPE.","ðŸ”´ Swallow":"Low v 0.55 dist 120 â€” should SWALLOWED.","ðŸŽ® Free Play":"Your lab â€” drag, thrust, fullscreen."}
 presets={
- "🌌 Gargantua (Edge)": dict(mass=7200,dist=280,v_ratio=0.92,ang=0.05,spin=0.9,incl=0.85,binary=False,thick=0.36,bright=1.3,star=280,photon=0.9,thrust=0.0),
- "💫 Binary Dance": dict(mass=5000,dist=380,v_ratio=1.15,ang=0.22,spin=0.6,incl=0.4,binary=True,thick=0.4,bright=0.9,star=350,photon=0.8,thrust=0.0),
- "🚀 Escape Slingshot": dict(mass=3200,dist=180,v_ratio=1.65,ang=-0.15,spin=0.3,incl=0.2,binary=False,thick=0.3,bright=0.9,star=250,photon=0.6,thrust=0.0),
- "🔴 Swallow": dict(mass=6800,dist=120,v_ratio=0.55,ang=0.3,spin=0.95,incl=0.6,binary=False,thick=0.5,bright=0.9,star=280,photon=1.2,thrust=0.0),
- "🎮 Free Play": dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0),
+ "ðŸŒŒ Gargantua (Edge)": dict(mass=7200,dist=280,v_ratio=0.92,ang=0.05,spin=0.9,incl=0.85,binary=False,thick=0.36,bright=1.3,star=280,photon=0.9,thrust=0.0),
+ "ðŸ’« Binary Dance": dict(mass=5000,dist=380,v_ratio=1.15,ang=0.22,spin=0.6,incl=0.4,binary=True,thick=0.4,bright=0.9,star=350,photon=0.8,thrust=0.0),
+ "ðŸš€ Escape Slingshot": dict(mass=3200,dist=180,v_ratio=1.65,ang=-0.15,spin=0.3,incl=0.2,binary=False,thick=0.3,bright=0.9,star=250,photon=0.6,thrust=0.0),
+ "ðŸ”´ Swallow": dict(mass=6800,dist=120,v_ratio=0.55,ang=0.3,spin=0.95,incl=0.6,binary=False,thick=0.5,bright=0.9,star=280,photon=1.2,thrust=0.0),
+ "ðŸŽ® Free Play": dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0),
 }
 def apply_preset(name):
     p=presets[name]
@@ -1335,17 +1462,17 @@ def apply_preset(name):
     for k,v in [("s_mass",p["mass"]),("s_dist",p["dist"]),("s_v_ratio",p["v_ratio"]),("s_ang",p["ang"]),("s_spin",p["spin"]),("s_thick",p["thick"]),("s_bright",p["bright"]),("s_incl",p["incl"]),("s_star",p["star"]),("s_photon",p["photon"]),("s_thrust",p["thrust"]),("bin",p["binary"])]:
         st.session_state[k]=v
 
-@st.dialog("Mission Briefing — ESC to close")
+@st.dialog("Mission Briefing â€” ESC to close")
 def demo_dialog(name):
     st.write(f"**{name}**\n\n{demo_desc[name]}")
     st.code(str(presets[name]))
-    if st.button("🚀 Launch", use_container_width=True, key=f"launch_{name}"):
+    if st.button("ðŸš€ Launch", use_container_width=True, key=f"launch_{name}"):
         apply_preset(name)
         st.rerun()
     if st.button("Cancel", use_container_width=True, key=f"cancel_{name}"):
         st.rerun()
 
-st.markdown("""<style>.stApp{background:#06080f}.card{background:#121624;border:1px solid #1f2742;border-radius:16px;padding:14px;margin-bottom:12px}.infoBox{background:#1a2138;border:1px solid #2a3555;border-radius:10px;padding:8px 10px;margin:6px 0;color:#a8b4cf;font-size:12px}.sticky{position:sticky;top:12px}.h1{font-size:50px;text-align:center}</style><div class="h1">🕳️ SINGULARITY V5.3</div>""", unsafe_allow_html=True)
+st.markdown("""<style>.stApp{background:#06080f}.card{background:#121624;border:1px solid #1f2742;border-radius:16px;padding:14px;margin-bottom:12px}.infoBox{background:#1a2138;border:1px solid #2a3555;border-radius:10px;padding:8px 10px;margin:6px 0;color:#a8b4cf;font-size:12px}.sticky{position:sticky;top:12px}.h1{font-size:50px;text-align:center}</style><div class="h1">ðŸ•³ï¸ SINGULARITY V5.3</div>""", unsafe_allow_html=True)
 cols=st.columns(5)
 for i,n in enumerate(presets):
     if cols[i].button(n, use_container_width=True, key=f"btn_{n}"):
@@ -1357,7 +1484,7 @@ def param_block(label,key,min_v,max_v,step,cfg_key):
     if cQ.button("?", key=f"q_{key}"):
         st.session_state.info=None if st.session_state.info==key else key
     if st.session_state.info==key:
-        st.markdown(f'<div class="infoBox">ℹ️ {infos[key]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="infoBox">â„¹ï¸ {infos[key]}</div>', unsafe_allow_html=True)
     val=st.slider(" ", min_v, max_v, st.session_state.cfg[cfg_key], step, key=f"s_{key}", label_visibility="collapsed")
     st.session_state.cfg[cfg_key]=val
     return val
@@ -1365,7 +1492,7 @@ def param_block(label,key,min_v,max_v,step,cfg_key):
 c1,c2=st.columns([0.92,1.58],gap="large")
 with c1:
     st.markdown('<div class="card">',unsafe_allow_html=True)
-    bh_mass=param_block("Black Hole Mass M☀","mass",500,8000,100,"mass")
+    bh_mass=param_block("Black Hole Mass Mâ˜€","mass",500,8000,100,"mass")
     dist=param_block("Initial Distance","dist",40,650,5,"dist")
     v_ratio=param_block("Velocity Ratio","v_ratio",0.2,2.2,0.02,"v_ratio")
     ang=param_block("Inclination Noise","ang",-0.6,0.6,0.02,"ang")
@@ -1379,21 +1506,21 @@ with c1:
     thrust=param_block("Fuel Thrust","thrust",0.0,1.5,0.05,"thrust")
     cL,cQ=st.columns([0.88,0.12]); cL.markdown("**Binary BH**")
     if cQ.button("?", key="q_binary"): st.session_state.info=None if st.session_state.info=="binary" else "binary"
-    if st.session_state.info=="binary": st.markdown(f'<div class="infoBox">ℹ️ {infos["binary"]}</div>', unsafe_allow_html=True)
+    if st.session_state.info=="binary": st.markdown(f'<div class="infoBox">â„¹ï¸ {infos["binary"]}</div>', unsafe_allow_html=True)
     binary=st.checkbox("Enable Binary", value=st.session_state.cfg["binary"], key="bin")
     st.session_state.cfg["binary"]=binary
     st.markdown('</div>',unsafe_allow_html=True)
     G=0.5; v_orb=np.sqrt(G*bh_mass/dist); speed=v_orb*v_ratio; ang_mom=dist*speed*np.cos(ang); energy=0.5*speed**2 - G*bh_mass/dist
     X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
     pred_enc=clf.predict(X)[0]; proba=clf.predict_proba(X)[0]; fate=le.inverse_transform([pred_enc])[0]; conf=float(np.max(proba))
-    st.markdown(f'<div class="card"><h4>🤖 {fate} {conf*100:.0f}%</h4></div>',unsafe_allow_html=True)
+    st.markdown(f'<div class="card"><h4>ðŸ¤– {fate} {conf*100:.0f}%</h4></div>',unsafe_allow_html=True)
 
 with c2:
     st.markdown('<div class="sticky">',unsafe_allow_html=True)
     html_template="""
     <div id="wrap" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid #1f2742;background:#000">
     <canvas id="c" width="920" height="680" style="width:100%;background:#000"></canvas>
-    <button id="fs" style="position:absolute;top:10px;right:10px;background:#121624;border:1px solid #2a3555;color:#8ea0c2;padding:6px 10px;border-radius:999px;font-size:11px;cursor:pointer">⛶ Fullscreen (ESC)</button>
+    <button id="fs" style="position:absolute;top:10px;right:10px;background:#121624;border:1px solid #2a3555;color:#8ea0c2;padding:6px 10px;border-radius:999px;font-size:11px;cursor:pointer">â›¶ Fullscreen (ESC)</button>
     </div><script>
     const CFG=JSON.parse('CFG_JSON');
     const W=920,H=680,CX=460,CY=340, canvas=document.getElementById('c'), ctx=canvas.getContext('2d'), wrap=document.getElementById('wrap');
