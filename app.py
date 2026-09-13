@@ -2198,3 +2198,5 @@ with cA2:
     ''', unsafe_allow_html=True)
 
 st.caption("Run: streamlit run app.py — needs 3 pkls in same folder | V6.1 whiteboard + binary toggle")
+
+
