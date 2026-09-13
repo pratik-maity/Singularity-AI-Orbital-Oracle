@@ -17,7 +17,7 @@ I built this because existing orbit sims are either too academic (no visuals) or
 
 ## 3. 🚀 Live Demo / Screenshots / Video
 
-**Live Demo:** `https://your-streamlit-link.streamlit.app` *(replace after deploy)*  
+**Live Demo:** `https://singularity--ml-orbital-oracle--madebypratik.streamlit.app/` *(replace after deploy)*  
 **Demo Video:** `https://youtu.be/your-demo` *(placeholder)*
 
 | Mode | Screenshot |
