@@ -1430,11 +1430,153 @@
 
 
 
-# v-6.0 - Whiteboard Layout: centered cockpit + dual side params + 3 aesthetic verdict cards + pill value badges
-# CHANGES: Symmetrical 3-col layout (left physics | center canvas | right cinematic), binary checkbox removed (demo-driven), aesthetic verdict cards (AI Proof | Singularity Core | Mission Console), pill value badge for slider visibility, inline ? infoBox retained, CFG_JSON injection retained
+# # v-6.0 - Whiteboard Layout: centered cockpit + dual side params + 3 aesthetic verdict cards + pill value badges
+# # CHANGES: Symmetrical 3-col layout (left physics | center canvas | right cinematic), binary checkbox removed (demo-driven), aesthetic verdict cards (AI Proof | Singularity Core | Mission Console), pill value badge for slider visibility, inline ? infoBox retained, CFG_JSON injection retained
 
+# import streamlit as st, pickle, numpy as np, pandas as pd, streamlit.components.v1 as components, json
+# st.set_page_config(page_title="Singularity V5.3", page_icon="ðŸ•³ï¸", layout="wide")
+# @st.cache_resource
+# def load():
+#     with open("orbit_model.pkl","rb") as f: clf=pickle.load(f)
+#     with open("label_encoder.pkl","rb") as f: le=pickle.load(f)
+#     with open("time_model.pkl","rb") as f: reg=pickle.load(f)
+#     return clf,le,reg
+# clf,le,reg=load()
+# if "cfg" not in st.session_state:
+#     st.session_state.cfg=dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0)
+# if "info" not in st.session_state: st.session_state.info=None
+# if "history" not in st.session_state: st.session_state.history=[]
+
+# infos={"mass":"Mass controls gravity.","dist":"Initial Distance: start radius.","v_ratio":"1.0=circular. <1 fall, >1.4 escape.","ang":"Tilt changes L.","spin":"Kerr Spin 0-0.99 warps lensing.","thick":"Disk Thickness thin vs puffy.","bright":"Doppler multiplier.","incl":"0 top view, 1 edge.","star":"Background stars.","photon":"Einstein ring glow.","binary":"Second BH â€” chaotic.","thrust":"Mid-flight kick."}
+# demo_desc={"ðŸŒŒ Gargantua (Edge)":"Nolan's Gargantua 7200 Mâ˜€ spin 0.9 edge-on. Expect STABLE.","ðŸ’« Binary Dance":"Two BHs 5000+3000 chaotic. No analytic solution.","ðŸš€ Escape Slingshot":"v_ratio 1.65 close 180 â€” should ESCAPE.","ðŸ”´ Swallow":"Low v 0.55 dist 120 â€” should SWALLOWED.","ðŸŽ® Free Play":"Your lab â€” drag, thrust, fullscreen."}
+# presets={
+#  "ðŸŒŒ Gargantua (Edge)": dict(mass=7200,dist=280,v_ratio=0.92,ang=0.05,spin=0.9,incl=0.85,binary=False,thick=0.36,bright=1.3,star=280,photon=0.9,thrust=0.0),
+#  "ðŸ’« Binary Dance": dict(mass=5000,dist=380,v_ratio=1.15,ang=0.22,spin=0.6,incl=0.4,binary=True,thick=0.4,bright=0.9,star=350,photon=0.8,thrust=0.0),
+#  "ðŸš€ Escape Slingshot": dict(mass=3200,dist=180,v_ratio=1.65,ang=-0.15,spin=0.3,incl=0.2,binary=False,thick=0.3,bright=0.9,star=250,photon=0.6,thrust=0.0),
+#  "ðŸ”´ Swallow": dict(mass=6800,dist=120,v_ratio=0.55,ang=0.3,spin=0.95,incl=0.6,binary=False,thick=0.5,bright=0.9,star=280,photon=1.2,thrust=0.0),
+#  "ðŸŽ® Free Play": dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0),
+# }
+# def apply_preset(name):
+#     p=presets[name]
+#     st.session_state.cfg=p.copy()
+#     for k,v in [("s_mass",p["mass"]),("s_dist",p["dist"]),("s_v_ratio",p["v_ratio"]),("s_ang",p["ang"]),("s_spin",p["spin"]),("s_thick",p["thick"]),("s_bright",p["bright"]),("s_incl",p["incl"]),("s_star",p["star"]),("s_photon",p["photon"]),("s_thrust",p["thrust"]),("bin",p["binary"])]:
+#         st.session_state[k]=v
+
+# @st.dialog("Mission Briefing â€” ESC to close")
+# def demo_dialog(name):
+#     st.write(f"**{name}**\n\n{demo_desc[name]}")
+#     st.code(str(presets[name]))
+#     if st.button("ðŸš€ Launch", use_container_width=True, key=f"launch_{name}"):
+#         apply_preset(name)
+#         st.rerun()
+#     if st.button("Cancel", use_container_width=True, key=f"cancel_{name}"):
+#         st.rerun()
+
+# st.markdown("""<style>.stApp{background:#06080f}.card{background:#121624;border:1px solid #1f2742;border-radius:16px;padding:14px;margin-bottom:12px}.infoBox{background:#1a2138;border:1px solid #2a3555;border-radius:10px;padding:8px 10px;margin:6px 0;color:#a8b4cf;font-size:12px}.sticky{position:sticky;top:12px}.h1{font-size:50px;text-align:center}</style><div class="h1">ðŸ•³ï¸ SINGULARITY V5.3</div>""", unsafe_allow_html=True)
+# cols=st.columns(5)
+# for i,n in enumerate(presets):
+#     if cols[i].button(n, use_container_width=True, key=f"btn_{n}"):
+#         demo_dialog(n)
+
+# def param_block(label,key,min_v,max_v,step,cfg_key):
+#     cL,cQ=st.columns([0.88,0.12])
+#     cL.markdown(f"**{label}**")
+#     if cQ.button("?", key=f"q_{key}"):
+#         st.session_state.info=None if st.session_state.info==key else key
+#     if st.session_state.info==key:
+#         st.markdown(f'<div class="infoBox">â„¹ï¸ {infos[key]}</div>', unsafe_allow_html=True)
+#     val=st.slider(" ", min_v, max_v, st.session_state.cfg[cfg_key], step, key=f"s_{key}", label_visibility="collapsed")
+#     st.session_state.cfg[cfg_key]=val
+#     return val
+
+# c1,c2=st.columns([0.92,1.58],gap="large")
+# with c1:
+#     st.markdown('<div class="card">',unsafe_allow_html=True)
+#     bh_mass=param_block("Black Hole Mass Mâ˜€","mass",500,8000,100,"mass")
+#     dist=param_block("Initial Distance","dist",40,650,5,"dist")
+#     v_ratio=param_block("Velocity Ratio","v_ratio",0.2,2.2,0.02,"v_ratio")
+#     ang=param_block("Inclination Noise","ang",-0.6,0.6,0.02,"ang")
+#     st.markdown('</div><div class="card">',unsafe_allow_html=True)
+#     spin=param_block("Kerr Spin","spin",0.0,0.99,0.05,"spin")
+#     disk_thick=param_block("Disk Thickness","thick",0.15,1.2,0.05,"thick")
+#     disk_bright=param_block("Disk Brightness","bright",0.2,1.5,0.1,"bright")
+#     incl=param_block("Observer Inclination","incl",0.0,1.0,0.05,"incl")
+#     star_dens=param_block("Starfield Density","star",50,500,10,"star")
+#     photon=param_block("Photon Ring","photon",0.0,1.5,0.05,"photon")
+#     thrust=param_block("Fuel Thrust","thrust",0.0,1.5,0.05,"thrust")
+#     cL,cQ=st.columns([0.88,0.12]); cL.markdown("**Binary BH**")
+#     if cQ.button("?", key="q_binary"): st.session_state.info=None if st.session_state.info=="binary" else "binary"
+#     if st.session_state.info=="binary": st.markdown(f'<div class="infoBox">â„¹ï¸ {infos["binary"]}</div>', unsafe_allow_html=True)
+#     binary=st.checkbox("Enable Binary", value=st.session_state.cfg["binary"], key="bin")
+#     st.session_state.cfg["binary"]=binary
+#     st.markdown('</div>',unsafe_allow_html=True)
+#     G=0.5; v_orb=np.sqrt(G*bh_mass/dist); speed=v_orb*v_ratio; ang_mom=dist*speed*np.cos(ang); energy=0.5*speed**2 - G*bh_mass/dist
+#     X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
+#     pred_enc=clf.predict(X)[0]; proba=clf.predict_proba(X)[0]; fate=le.inverse_transform([pred_enc])[0]; conf=float(np.max(proba))
+#     st.markdown(f'<div class="card"><h4>ðŸ¤– {fate} {conf*100:.0f}%</h4></div>',unsafe_allow_html=True)
+
+# with c2:
+#     st.markdown('<div class="sticky">',unsafe_allow_html=True)
+#     html_template="""
+#     <div id="wrap" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid #1f2742;background:#000">
+#     <canvas id="c" width="920" height="680" style="width:100%;background:#000"></canvas>
+#     <button id="fs" style="position:absolute;top:10px;right:10px;background:#121624;border:1px solid #2a3555;color:#8ea0c2;padding:6px 10px;border-radius:999px;font-size:11px;cursor:pointer">â›¶ Fullscreen (ESC)</button>
+#     </div><script>
+#     const CFG=JSON.parse('CFG_JSON');
+#     const W=920,H=680,CX=460,CY=340, canvas=document.getElementById('c'), ctx=canvas.getContext('2d'), wrap=document.getElementById('wrap');
+#     let bh=CFG.mass,dist=CFG.dist,vr=CFG.v_ratio,ang=CFG.ang,spin=CFG.spin,incl=CFG.incl,thick=CFG.thick,bright=CFG.bright,starN=CFG.star,phot=CFG.photon,binary=CFG.binary;
+#     let G=0.5,x=CX+dist,y=CY,v_orb=Math.sqrt(G*bh/dist),vx=Math.cos(Math.PI/2+ang)*v_orb*vr,vy=Math.sin(Math.PI/2+ang)*v_orb*vr,trail=[],stars=[],disk=[];
+#     for(let i=0;i<starN;i++) stars.push({x:Math.random()*W,y:Math.random()*H,b:Math.random()});
+#     for(let i=0;i<150;i++){let r=30+Math.random()*88;disk.push({r:r,a:Math.random()*6.28,spd:0.012+(1.8+spin*1.2)/r});}
+#     let h=Math.sqrt(bh)*0.8+8+spin*6,h2=h*0.62,bh2x=CX-220,bh2y=CY-80;
+#     function lens(px,py,cx,cy,hh){let dx=px-cx,dy=py-cy,d2=dx*dx+dy*dy;if(d2<25)return{x:px,y:py};let bend=(hh*hh*2.4+spin*80)/Math.max(d2,110);return{x:px+dx*bend*0.26,y:py+dy*bend*0.26*(0.6+incl*0.6)};}
+#     document.getElementById('fs').onclick=()=>wrap.requestFullscreen();
+#     let dragging=false,s=null;canvas.addEventListener('mousedown',e=>{dragging=true;s={x:e.offsetX,y:e.offsetY};});canvas.addEventListener('mouseup',e=>{if(!dragging)return;dragging=false;let dx=e.offsetX-s.x,dy=e.offsetY-s.y;vx+=dx*0.02;vy+=dy*0.02;});
+#     function draw(){ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(0,0,W,H);for(let s of stars){let p=lens(s.x,s.y,CX,CY,h);if(binary){let p2=lens(p.x,p.y,bh2x,bh2y,h2);p=p2;}ctx.fillStyle='rgba(180,200,255,'+(0.1+s.b*0.7)+')';ctx.fillRect(p.x,p.y,1.2,1.2);}for(let d of disk){d.a+=d.spd;let x0=CX+Math.cos(d.a)*d.r,y0=CY+Math.sin(d.a)*d.r*thick*incl;let p=lens(x0,y0,CX,CY,h);if(Math.hypot(p.x-CX,p.y-CY)>h+1){ctx.fillStyle='rgba('+(Math.sin(d.a+spin)>0?255:80)+',150,'+(Math.sin(d.a+spin)>0?90:255)+','+(0.18*bright+0.4)+')';ctx.fillRect(p.x,p.y,2,1);}}let grad=ctx.createRadialGradient(CX,CY,h,CX,CY,h+26*phot);grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(0.3,'rgba(110,130,255,'+(0.8*phot)+')');grad.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(CX,CY,h+26*phot,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(CX,CY,h,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(130,150,255,0.5)';ctx.stroke();if(binary){ctx.beginPath();ctx.arc(bh2x,bh2y,h2,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(180,130,255,0.4)';ctx.stroke();}let rx=x-CX,ry=y-CY,r=Math.hypot(rx,ry);if(r<h)return;let a=G*bh/(r*r*r)*0.46;vx-=rx*a*10;vy-=ry*a*10;x+=vx;y+=vy;trail.push([x,y]);if(trail.length>800)trail.shift();for(let i=1;i<trail.length;i++){let t=i/trail.length;let lp=lens(trail[i][0],trail[i][1],CX,CY,h);if(binary)lp=lens(lp.x,lp.y,bh2x,bh2y,h2);ctx.strokeStyle='rgba(255,'+(210+t*40)+','+(40+t*80)+','+(0.08+t*0.9)+')';ctx.lineWidth=0.3+t*2.4;ctx.beginPath();ctx.moveTo(trail[i-1][0],trail[i-1][1]);ctx.lineTo(lp.x,lp.y);ctx.stroke();}let p2=lens(x,y,CX,CY,h);if(binary)p2=lens(p2.x,p2.y,bh2x,bh2y,h2);ctx.shadowBlur=18;ctx.shadowColor='#ffde7a';ctx.beginPath();ctx.arc(p2.x,p2.y,4.5,0,6.28);ctx.fillStyle='#ffde7a';ctx.fill();ctx.shadowBlur=0;requestAnimationFrame(draw);}ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);draw();
+#     </script>
+#     """
+#     html_final=html_template.replace("CFG_JSON", json.dumps(st.session_state.cfg))
+#     components.html(html_final, height=700)
+#     st.markdown('</div>',unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# v-6.0 - Whiteboard Layout: centered cockpit + dual side params + 3 aesthetic verdict cards + pill value badges
+# CHANGES: Symmetrical 3-col (left physics | center canvas | right cinematic) on real V5.3 base, binary checkbox removed (demo-driven), aesthetic cards AI Proof | Singularity Core | Mission Console, pill value badge fixes visibility
 import streamlit as st, pickle, numpy as np, pandas as pd, streamlit.components.v1 as components, json
-st.set_page_config(page_title="Singularity V5.3", page_icon="ðŸ•³ï¸", layout="wide")
+st.set_page_config(page_title="Singularity V6.0", page_icon="🕳️", layout="wide")
 @st.cache_resource
 def load():
     with open("orbit_model.pkl","rb") as f: clf=pickle.load(f)
@@ -1445,16 +1587,15 @@ clf,le,reg=load()
 if "cfg" not in st.session_state:
     st.session_state.cfg=dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0)
 if "info" not in st.session_state: st.session_state.info=None
-if "history" not in st.session_state: st.session_state.history=[]
 
-infos={"mass":"Mass controls gravity.","dist":"Initial Distance: start radius.","v_ratio":"1.0=circular. <1 fall, >1.4 escape.","ang":"Tilt changes L.","spin":"Kerr Spin 0-0.99 warps lensing.","thick":"Disk Thickness thin vs puffy.","bright":"Doppler multiplier.","incl":"0 top view, 1 edge.","star":"Background stars.","photon":"Einstein ring glow.","binary":"Second BH â€” chaotic.","thrust":"Mid-flight kick."}
-demo_desc={"ðŸŒŒ Gargantua (Edge)":"Nolan's Gargantua 7200 Mâ˜€ spin 0.9 edge-on. Expect STABLE.","ðŸ’« Binary Dance":"Two BHs 5000+3000 chaotic. No analytic solution.","ðŸš€ Escape Slingshot":"v_ratio 1.65 close 180 â€” should ESCAPE.","ðŸ”´ Swallow":"Low v 0.55 dist 120 â€” should SWALLOWED.","ðŸŽ® Free Play":"Your lab â€” drag, thrust, fullscreen."}
+infos={"mass":"Mass controls gravity: v_orb=sqrt(G*M/r). h=sqrt(bh)*0.8+8+spin*6","dist":"Initial Distance: start radius r.","v_ratio":"1.0=circular. <1 fall, >1.4 escape. speed=v_orb*v_ratio","ang":"Tilt changes L — inclination noise.","spin":"Kerr Spin 0-0.99 warps lensing asymmetry spin*80.","thick":"Disk Thickness thin vs puffy A2.","bright":"Disk Brightness Doppler multiplier A2.","incl":"Observer 0 top, 1 edge Interstellar A3.","star":"Background stars B6 density.","photon":"Photon Ring glow B10.","binary":"Second BH 60% mass chaotic 3-body B7.","thrust":"Mid-flight kick A5 adds energy."}
+demo_desc={"🌌 Gargantua (Edge)":"Nolan's Gargantua 7200 M☀ spin 0.9 edge-on. Expect STABLE.","💫 Binary Dance":"Two BHs 5000+3000 chaotic. No analytic solution. Main wow.","🚀 Escape Slingshot":"v_ratio 1.65 close 180 — should ESCAPE.","🔴 Swallow":"Low v 0.55 dist 120 — should SWALLOWED.","🎮 Free Play":"Your lab — drag, thrust, fullscreen."}
 presets={
- "ðŸŒŒ Gargantua (Edge)": dict(mass=7200,dist=280,v_ratio=0.92,ang=0.05,spin=0.9,incl=0.85,binary=False,thick=0.36,bright=1.3,star=280,photon=0.9,thrust=0.0),
- "ðŸ’« Binary Dance": dict(mass=5000,dist=380,v_ratio=1.15,ang=0.22,spin=0.6,incl=0.4,binary=True,thick=0.4,bright=0.9,star=350,photon=0.8,thrust=0.0),
- "ðŸš€ Escape Slingshot": dict(mass=3200,dist=180,v_ratio=1.65,ang=-0.15,spin=0.3,incl=0.2,binary=False,thick=0.3,bright=0.9,star=250,photon=0.6,thrust=0.0),
- "ðŸ”´ Swallow": dict(mass=6800,dist=120,v_ratio=0.55,ang=0.3,spin=0.95,incl=0.6,binary=False,thick=0.5,bright=0.9,star=280,photon=1.2,thrust=0.0),
- "ðŸŽ® Free Play": dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0),
+ "🌌 Gargantua (Edge)": dict(mass=7200,dist=280,v_ratio=0.92,ang=0.05,spin=0.9,incl=0.85,binary=False,thick=0.36,bright=1.3,star=280,photon=0.9,thrust=0.0),
+ "💫 Binary Dance": dict(mass=5000,dist=380,v_ratio=1.15,ang=0.22,spin=0.6,incl=0.4,binary=True,thick=0.4,bright=0.9,star=350,photon=0.8,thrust=0.0),
+ "🚀 Escape Slingshot": dict(mass=3200,dist=180,v_ratio=1.65,ang=-0.15,spin=0.3,incl=0.2,binary=False,thick=0.3,bright=0.9,star=250,photon=0.6,thrust=0.0),
+ "🔴 Swallow": dict(mass=6800,dist=120,v_ratio=0.55,ang=0.3,spin=0.95,incl=0.6,binary=False,thick=0.5,bright=0.9,star=280,photon=1.2,thrust=0.0),
+ "🎮 Free Play": dict(mass=4500,dist=220,v_ratio=1.35,ang=0.12,spin=0.5,incl=0.5,binary=False,thick=0.36,bright=0.9,star=280,photon=0.85,thrust=0.0),
 }
 def apply_preset(name):
     p=presets[name]
@@ -1462,79 +1603,163 @@ def apply_preset(name):
     for k,v in [("s_mass",p["mass"]),("s_dist",p["dist"]),("s_v_ratio",p["v_ratio"]),("s_ang",p["ang"]),("s_spin",p["spin"]),("s_thick",p["thick"]),("s_bright",p["bright"]),("s_incl",p["incl"]),("s_star",p["star"]),("s_photon",p["photon"]),("s_thrust",p["thrust"]),("bin",p["binary"])]:
         st.session_state[k]=v
 
-@st.dialog("Mission Briefing â€” ESC to close")
+@st.dialog("Mission Briefing — ESC to close")
 def demo_dialog(name):
     st.write(f"**{name}**\n\n{demo_desc[name]}")
     st.code(str(presets[name]))
-    if st.button("ðŸš€ Launch", use_container_width=True, key=f"launch_{name}"):
+    if st.button("🚀 Launch", use_container_width=True, key=f"launch_{name}"):
         apply_preset(name)
         st.rerun()
     if st.button("Cancel", use_container_width=True, key=f"cancel_{name}"):
         st.rerun()
 
-st.markdown("""<style>.stApp{background:#06080f}.card{background:#121624;border:1px solid #1f2742;border-radius:16px;padding:14px;margin-bottom:12px}.infoBox{background:#1a2138;border:1px solid #2a3555;border-radius:10px;padding:8px 10px;margin:6px 0;color:#a8b4cf;font-size:12px}.sticky{position:sticky;top:12px}.h1{font-size:50px;text-align:center}</style><div class="h1">ðŸ•³ï¸ SINGULARITY V5.3</div>""", unsafe_allow_html=True)
+st.markdown("""<style>
+.stApp{background:#06080f}
+.card{background:#121624;border:1px solid #1f2742;border-radius:16px;padding:14px;margin-bottom:12px}
+.infoBox{background:#1a2138;border:1px solid #2a3555;border-radius:10px;padding:8px 10px;margin:6px 0;color:#a8b4cf;font-size:12px}
+.sticky{position:sticky;top:12px}
+.h1{font-size:48px;text-align:center;font-weight:900;letter-spacing:4px}
+.value-pill{background:#1e1e2e;border:1px solid #ff5a5a55;color:#fff;padding:2px 10px;border-radius:999px;font-weight:800;font-size:13px;display:inline-block;min-width:48px;text-align:center;margin-bottom:4px}
+.aesthetic-card{background:radial-gradient(120% 120% at 20% 10%, #1a1f35 0%, #0b0f1e 60%);border:1px solid #232b4a;border-radius:18px;padding:16px}
+.verdict-stable{box-shadow:0 0 30px #22c55e55,inset 0 0 20px #22c55e22;border:1px solid #22c55e}
+.verdict-swallowed{box-shadow:0 0 40px #ef444455,inset 0 0 30px #ef444422;border:1px solid #ef4444;animation:pulseR 1.5s infinite}
+.verdict-escape{box-shadow:0 0 30px #3b82f655,inset 0 0 20px #3b82f622;border:1px solid #3b82f6}
+@keyframes pulseR{0%{box-shadow:0 0 20px #ef444455}50%{box-shadow:0 0 50px #ef444488}100%{box-shadow:0 0 20px #ef444455}}
+.stat-pill{border:1px solid #1e2335;background:#0f1320;padding:4px 10px;border-radius:999px;font-size:11px;color:#a8b4cf}
+</style><div class="h1">🕳️ SINGULARITY V6.0</div>""", unsafe_allow_html=True)
+st.markdown('<div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;color:#8b92a8;font-size:11px;margin:6px 0 10px 0"><span class="stat-pill">10k Sims</span><span class="stat-pill">XGB 97.5%</span><span class="stat-pill">Kerr Spin</span><span class="stat-pill">Binary 60%</span><span class="stat-pill">bend=(h²*2.4+spin*80)/max(d²,110)</span></div>', unsafe_allow_html=True)
+
 cols=st.columns(5)
 for i,n in enumerate(presets):
     if cols[i].button(n, use_container_width=True, key=f"btn_{n}"):
         demo_dialog(n)
 
 def param_block(label,key,min_v,max_v,step,cfg_key):
-    cL,cQ=st.columns([0.88,0.12])
+    cL,cQ=st.columns([0.78,0.22])
     cL.markdown(f"**{label}**")
     if cQ.button("?", key=f"q_{key}"):
         st.session_state.info=None if st.session_state.info==key else key
-    if st.session_state.info==key:
-        st.markdown(f'<div class="infoBox">â„¹ï¸ {infos[key]}</div>', unsafe_allow_html=True)
+    cur = st.session_state.cfg[cfg_key]
+    s_key=f"s_{key}"
+    cur_display = st.session_state[s_key] if s_key in st.session_state else cur
+    st.markdown(f'<div class="value-pill">{cur_display}</div>', unsafe_allow_html=True)
     val=st.slider(" ", min_v, max_v, st.session_state.cfg[cfg_key], step, key=f"s_{key}", label_visibility="collapsed")
     st.session_state.cfg[cfg_key]=val
+    if st.session_state.info==key:
+        st.markdown(f'<div class="infoBox">ℹ️ {infos[key]}</div>', unsafe_allow_html=True)
     return val
 
-c1,c2=st.columns([0.92,1.58],gap="large")
-with c1:
+left, center, right = st.columns([1.1, 2.2, 1.1], gap="large")
+
+with left:
+    st.markdown("### PHYSICS")
     st.markdown('<div class="card">',unsafe_allow_html=True)
-    bh_mass=param_block("Black Hole Mass Mâ˜€","mass",500,8000,100,"mass")
+    bh_mass=param_block("Black Hole Mass M☀","mass",500,8000,100,"mass")
     dist=param_block("Initial Distance","dist",40,650,5,"dist")
     v_ratio=param_block("Velocity Ratio","v_ratio",0.2,2.2,0.02,"v_ratio")
     ang=param_block("Inclination Noise","ang",-0.6,0.6,0.02,"ang")
-    st.markdown('</div><div class="card">',unsafe_allow_html=True)
-    spin=param_block("Kerr Spin","spin",0.0,0.99,0.05,"spin")
+    thrust=param_block("Fuel Thrust A5","thrust",0.0,1.5,0.05,"thrust")
+    st.markdown('</div>',unsafe_allow_html=True)
+
+with right:
+    st.markdown("### CINEMATIC")
+    st.markdown('<div class="card">',unsafe_allow_html=True)
+    spin=param_block("Kerr Spin A1","spin",0.0,0.99,0.05,"spin")
     disk_thick=param_block("Disk Thickness","thick",0.15,1.2,0.05,"thick")
     disk_bright=param_block("Disk Brightness","bright",0.2,1.5,0.1,"bright")
-    incl=param_block("Observer Inclination","incl",0.0,1.0,0.05,"incl")
-    star_dens=param_block("Starfield Density","star",50,500,10,"star")
-    photon=param_block("Photon Ring","photon",0.0,1.5,0.05,"photon")
-    thrust=param_block("Fuel Thrust","thrust",0.0,1.5,0.05,"thrust")
-    cL,cQ=st.columns([0.88,0.12]); cL.markdown("**Binary BH**")
-    if cQ.button("?", key="q_binary"): st.session_state.info=None if st.session_state.info=="binary" else "binary"
-    if st.session_state.info=="binary": st.markdown(f'<div class="infoBox">â„¹ï¸ {infos["binary"]}</div>', unsafe_allow_html=True)
-    binary=st.checkbox("Enable Binary", value=st.session_state.cfg["binary"], key="bin")
-    st.session_state.cfg["binary"]=binary
+    incl=param_block("Observer Inclination A3","incl",0.0,1.0,0.05,"incl")
+    star_dens=param_block("Starfield B6","star",50,500,10,"star")
+    photon=param_block("Photon Ring B10","photon",0.0,1.5,0.05,"photon")
+    is_binary = st.session_state.cfg["binary"]
+    st.markdown(f'<div style="margin-top:8px"><span class="stat-pill">Binary: {"ON — Binary Dance" if is_binary else "OFF"}</span></div>', unsafe_allow_html=True)
     st.markdown('</div>',unsafe_allow_html=True)
-    G=0.5; v_orb=np.sqrt(G*bh_mass/dist); speed=v_orb*v_ratio; ang_mom=dist*speed*np.cos(ang); energy=0.5*speed**2 - G*bh_mass/dist
-    X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
-    pred_enc=clf.predict(X)[0]; proba=clf.predict_proba(X)[0]; fate=le.inverse_transform([pred_enc])[0]; conf=float(np.max(proba))
-    st.markdown(f'<div class="card"><h4>ðŸ¤– {fate} {conf*100:.0f}%</h4></div>',unsafe_allow_html=True)
 
-with c2:
+G=0.5; v_orb=np.sqrt(G*bh_mass/dist); speed=v_orb*v_ratio; ang_mom=dist*speed*np.cos(ang); energy=0.5*speed**2 - G*bh_mass/dist
+X=pd.DataFrame([{"bh_mass":bh_mass,"dist":dist,"speed":speed,"v_ratio":v_ratio,"ang_mom":ang_mom,"energy":energy}])
+pred_enc=clf.predict(X)[0]; proba=clf.predict_proba(X)[0]; fate=le.inverse_transform([pred_enc])[0]; conf=float(np.max(proba))
+counter=""
+if "swallow" in fate.lower():
+    need = 1.05 - v_ratio
+    if need>0: counter=f"To survive ↑ v_ratio by {need:.2f} (need ≥1.05)"
+    else: counter="At limit — increase thrust or distance"
+elif "stable" in fate.lower():
+    counter=f"Edge stable — margin {v_ratio-0.85:.2f} | thrust can raise energy by {thrust*2:.1f}"
+
+with center:
     st.markdown('<div class="sticky">',unsafe_allow_html=True)
     html_template="""
     <div id="wrap" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid #1f2742;background:#000">
     <canvas id="c" width="920" height="680" style="width:100%;background:#000"></canvas>
-    <button id="fs" style="position:absolute;top:10px;right:10px;background:#121624;border:1px solid #2a3555;color:#8ea0c2;padding:6px 10px;border-radius:999px;font-size:11px;cursor:pointer">â›¶ Fullscreen (ESC)</button>
+    <button id="fs" style="position:absolute;top:10px;right:10px;background:#121624;border:1px solid #2a3555;color:#8ea0c2;padding:6px 10px;border-radius:999px;font-size:11px;cursor:pointer">⛶ Fullscreen (ESC)</button>
+    <div id="binBadge" style="position:absolute;top:10px;left:10px;display:none;background:#ff3b3b22;border:1px solid #ff3b3b66;color:#ffb4b4;padding:4px 10px;border-radius:999px;font-size:11px">BINARY ON • 3-BODY</div>
+    <div id="hint" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:#0e1320cc;border:1px solid #253053;color:#8ea0c8;padding:4px 10px;border-radius:999px;font-size:10px">C11 Drag-to-launch • C12 Ghost orbit dotted • Scroll zoom</div>
     </div><script>
     const CFG=JSON.parse('CFG_JSON');
     const W=920,H=680,CX=460,CY=340, canvas=document.getElementById('c'), ctx=canvas.getContext('2d'), wrap=document.getElementById('wrap');
     let bh=CFG.mass,dist=CFG.dist,vr=CFG.v_ratio,ang=CFG.ang,spin=CFG.spin,incl=CFG.incl,thick=CFG.thick,bright=CFG.bright,starN=CFG.star,phot=CFG.photon,binary=CFG.binary;
-    let G=0.5,x=CX+dist,y=CY,v_orb=Math.sqrt(G*bh/dist),vx=Math.cos(Math.PI/2+ang)*v_orb*vr,vy=Math.sin(Math.PI/2+ang)*v_orb*vr,trail=[],stars=[],disk=[];
+    let G=0.5,x=CX+dist,y=CY,v_orb=Math.sqrt(G*bh/dist),vx=Math.cos(Math.PI/2+ang)*v_orb*vr,vy=Math.sin(Math.PI/2+ang)*v_orb*vr,trail=[],stars=[],disk=[],ghost=[];
     for(let i=0;i<starN;i++) stars.push({x:Math.random()*W,y:Math.random()*H,b:Math.random()});
     for(let i=0;i<150;i++){let r=30+Math.random()*88;disk.push({r:r,a:Math.random()*6.28,spd:0.012+(1.8+spin*1.2)/r});}
     let h=Math.sqrt(bh)*0.8+8+spin*6,h2=h*0.62,bh2x=CX-220,bh2y=CY-80;
+    if(binary) document.getElementById('binBadge').style.display='block';
     function lens(px,py,cx,cy,hh){let dx=px-cx,dy=py-cy,d2=dx*dx+dy*dy;if(d2<25)return{x:px,y:py};let bend=(hh*hh*2.4+spin*80)/Math.max(d2,110);return{x:px+dx*bend*0.26,y:py+dy*bend*0.26*(0.6+incl*0.6)};}
     document.getElementById('fs').onclick=()=>wrap.requestFullscreen();
-    let dragging=false,s=null;canvas.addEventListener('mousedown',e=>{dragging=true;s={x:e.offsetX,y:e.offsetY};});canvas.addEventListener('mouseup',e=>{if(!dragging)return;dragging=false;let dx=e.offsetX-s.x,dy=e.offsetY-s.y;vx+=dx*0.02;vy+=dy*0.02;});
-    function draw(){ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(0,0,W,H);for(let s of stars){let p=lens(s.x,s.y,CX,CY,h);if(binary){let p2=lens(p.x,p.y,bh2x,bh2y,h2);p=p2;}ctx.fillStyle='rgba(180,200,255,'+(0.1+s.b*0.7)+')';ctx.fillRect(p.x,p.y,1.2,1.2);}for(let d of disk){d.a+=d.spd;let x0=CX+Math.cos(d.a)*d.r,y0=CY+Math.sin(d.a)*d.r*thick*incl;let p=lens(x0,y0,CX,CY,h);if(Math.hypot(p.x-CX,p.y-CY)>h+1){ctx.fillStyle='rgba('+(Math.sin(d.a+spin)>0?255:80)+',150,'+(Math.sin(d.a+spin)>0?90:255)+','+(0.18*bright+0.4)+')';ctx.fillRect(p.x,p.y,2,1);}}let grad=ctx.createRadialGradient(CX,CY,h,CX,CY,h+26*phot);grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(0.3,'rgba(110,130,255,'+(0.8*phot)+')');grad.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(CX,CY,h+26*phot,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(CX,CY,h,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(130,150,255,0.5)';ctx.stroke();if(binary){ctx.beginPath();ctx.arc(bh2x,bh2y,h2,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(180,130,255,0.4)';ctx.stroke();}let rx=x-CX,ry=y-CY,r=Math.hypot(rx,ry);if(r<h)return;let a=G*bh/(r*r*r)*0.46;vx-=rx*a*10;vy-=ry*a*10;x+=vx;y+=vy;trail.push([x,y]);if(trail.length>800)trail.shift();for(let i=1;i<trail.length;i++){let t=i/trail.length;let lp=lens(trail[i][0],trail[i][1],CX,CY,h);if(binary)lp=lens(lp.x,lp.y,bh2x,bh2y,h2);ctx.strokeStyle='rgba(255,'+(210+t*40)+','+(40+t*80)+','+(0.08+t*0.9)+')';ctx.lineWidth=0.3+t*2.4;ctx.beginPath();ctx.moveTo(trail[i-1][0],trail[i-1][1]);ctx.lineTo(lp.x,lp.y);ctx.stroke();}let p2=lens(x,y,CX,CY,h);if(binary)p2=lens(p2.x,p2.y,bh2x,bh2y,h2);ctx.shadowBlur=18;ctx.shadowColor='#ffde7a';ctx.beginPath();ctx.arc(p2.x,p2.y,4.5,0,6.28);ctx.fillStyle='#ffde7a';ctx.fill();ctx.shadowBlur=0;requestAnimationFrame(draw);}ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);draw();
+    let dragging=false,s=null;canvas.addEventListener('mousedown',e=>{dragging=true;s={x:e.offsetX,y:e.offsetY};});canvas.addEventListener('mouseup',e=>{if(!dragging)return;dragging=false;let dx=e.offsetX-s.x,dy=e.offsetY-s.y;vx+=dx*0.02;vy+=dy*0.02;trail=[];ghost=[];computeGhost();});
+    function computeGhost(){ghost=[];let gx=CX+dist,gy=CY,g_vx=Math.cos(Math.PI/2+ang)*v_orb*vr,g_vy=Math.sin(Math.PI/2+ang)*v_orb*vr;for(let i=0;i<500;i++){let dx=CX-gx,dy=CY-gy,d2=dx*dx+dy*dy;let h=Math.sqrt(bh)*0.8+8+spin*6;let bend=(h*h*2.4+spin*80)/Math.max(d2,110);let d=Math.sqrt(d2);let ax=dx/d*bend*0.35,ay=dy/d*bend*0.35;g_vx+=ax;g_vy+=ay;gx+=g_vx;gy+=g_vy;if(i%6==0)ghost.push({x:gx,y:gy});if(d<18)break;}}
+    computeGhost();
+    function draw(){ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(0,0,W,H);for(let s of stars){let p=lens(s.x,s.y,CX,CY,h);if(binary){let p2=lens(p.x,p.y,bh2x,bh2y,h2);p=p2;}ctx.fillStyle='rgba(180,200,255,'+(0.1+s.b*0.7)+')';ctx.fillRect(p.x,p.y,1.2,1.2);}for(let d of disk){d.a+=d.spd;let x0=CX+Math.cos(d.a)*d.r,y0=CY+Math.sin(d.a)*d.r*thick*incl;let p=lens(x0,y0,CX,CY,h);if(Math.hypot(p.x-CX,p.y-CY)>h+1){ctx.fillStyle='rgba('+(Math.sin(d.a+spin)>0?255:80)+',150,'+(Math.sin(d.a+spin)>0?90:255)+','+(0.18*bright+0.4)+')';ctx.fillRect(p.x,p.y,2,1);}}let grad=ctx.createRadialGradient(CX,CY,h,CX,CY,h+26*phot);grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(0.3,'rgba(110,130,255,'+(0.8*phot)+')');grad.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(CX,CY,h+26*phot,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(CX,CY,h,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(130,150,255,0.5)';ctx.stroke();if(binary){ctx.beginPath();ctx.arc(bh2x,bh2y,h2,0,6.28);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='rgba(180,130,255,0.4)';ctx.stroke();}let rx=x-CX,ry=y-CY,r=Math.hypot(rx,ry);if(r<h)return;let a=G*bh/(r*r*r)*0.46;vx-=rx*a*10;vy-=ry*a*10;x+=vx;y+=vy;trail.push([x,y]);if(trail.length>800)trail.shift();if(ghost.length>1){ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ghost[0].x,ghost[0].y);for(let g of ghost)ctx.lineTo(g.x,g.y);ctx.stroke();ctx.setLineDash([]);}for(let i=1;i<trail.length;i++){let t=i/trail.length;let lp=lens(trail[i][0],trail[i][1],CX,CY,h);if(binary)lp=lens(lp.x,lp.y,bh2x,bh2y,h2);ctx.strokeStyle='rgba(255,'+(210+t*40)+','+(40+t*80)+','+(0.08+t*0.9)+')';ctx.lineWidth=0.3+t*2.4;ctx.beginPath();ctx.moveTo(trail[i-1][0],trail[i-1][1]);ctx.lineTo(lp.x,lp.y);ctx.stroke();}let p2=lens(x,y,CX,CY,h);if(binary)p2=lens(p2.x,p2.y,bh2x,bh2y,h2);ctx.shadowBlur=18;ctx.shadowColor='#ffde7a';ctx.beginPath();ctx.arc(p2.x,p2.y,4.5,0,6.28);ctx.fillStyle='#ffde7a';ctx.fill();ctx.shadowBlur=0;requestAnimationFrame(draw);}ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);draw();
     </script>
     """
     html_final=html_template.replace("CFG_JSON", json.dumps(st.session_state.cfg))
     components.html(html_final, height=700)
     st.markdown('</div>',unsafe_allow_html=True)
+
+st.markdown("---")
+cA1,cCenter,cA2 = st.columns([1.2,1.0,1.2], gap="medium")
+
+with cCenter:
+    lab = fate.upper()
+    if "SWALLOW" in lab:
+        cls="verdict-swallowed"; icon="🕳️"; color="#ef4444"; glow="radial-gradient(80% 80% at 50% 20%, #3a0f0f 0%, #0e0a0a 60%)"
+    elif "ESCAP" in lab:
+        cls="verdict-escape"; icon="🚀"; color="#3b82f6"; glow="radial-gradient(80% 80% at 50% 20%, #0f1e3a 0%, #0a0e1a 60%)"
+    else:
+        cls="verdict-stable"; icon="🛰️"; color="#22c55e"; glow="radial-gradient(80% 80% at 50% 20%, #0f2a1a 0%, #0a1510 60%)"
+    st.markdown(f'''
+    <div class="aesthetic-card {cls}" style="text-align:center;background:{glow};padding:20px 14px;min-height:210px">
+      <div style="font-size:40px">{icon}</div>
+      <div style="font-size:10px;letter-spacing:3px;color:#8ea0c8;margin-top:4px">SINGULARITY CORE</div>
+      <div style="font-size:28px;font-weight:900;color:{color};letter-spacing:2px;margin:6px 0">{lab}</div>
+      <div style="display:flex;justify-content:center;gap:6px"><span class="stat-pill" style="color:{color};border-color:{color}66">{conf*100:.0f}% AI CONF</span><span class="stat-pill">{speed:.1f} speed</span></div>
+      <div style="margin-top:12px;height:4px;background:#1a233f;border-radius:999px;overflow:hidden"><div style="width:{conf*100}%;height:100%;background:{color};box-shadow:0 0 10px {color}"></div></div>
+    </div>
+    ''', unsafe_allow_html=True)
+
+with cA1:
+    st.markdown(f'''
+    <div class="aesthetic-card" style="min-height:210px">
+      <div style="display:flex;justify-content:space-between"><div style="font-weight:800">🧠 AI MODEL PROOF</div><span class="stat-pill">XGB 97.5%</span></div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div style="background:#0e1220;border:1px solid #1e2848;border-radius:10px;padding:7px"><div style="font-size:9px;color:#7a86a8">BH_MASS</div><div style="font-weight:700;font-size:12px">{bh_mass:.0f}</div></div>
+        <div style="background:#0e1220;border:1px solid #1e2848;border-radius:10px;padding:7px"><div style="font-size:9px;color:#7a86a8">SPEED</div><div style="font-weight:700;font-size:12px">{speed:.2f}</div></div>
+        <div style="background:#0e1220;border:1px solid #1e2848;border-radius:10px;padding:7px"><div style="font-size:9px;color:#7a86a8">ANG_MOM</div><div style="font-weight:700;font-size:12px">{ang_mom:.0f}</div></div>
+        <div style="background:#0e1220;border:1px solid #1e2848;border-radius:10px;padding:7px"><div style="font-size:9px;color:#7a86a8">ENERGY</div><div style="font-weight:700;font-size:12px">{energy:.2f}</div></div>
+      </div>
+      <div style="margin-top:10px;background:#11162a;border-radius:10px;padding:9px;border-left:3px solid #f59e0b">
+        <div style="font-size:10px;color:#fbbf24;font-weight:700">C14 COUNTERFACTUAL</div><div style="font-size:11px;color:#e2e8f0;margin-top:3px">{counter if counter else f"Optimal v_ratio {v_ratio:.2f} stable"}</div>
+      </div>
+    </div>
+    ''', unsafe_allow_html=True)
+
+with cA2:
+    st.markdown(f'''
+    <div class="aesthetic-card" style="min-height:210px">
+      <div style="display:flex;justify-content:space-between"><div style="font-weight:800">🎛️ MISSION CONSOLE</div><span class="stat-pill">INTERSTELLAR</span></div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#8ea0c8"><span>C12 Ghost Orbit</span><span style="color:#22c55e">● ACTIVE dotted</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#8ea0c8;margin-top:5px"><span>C11 Drag-to-Launch</span><span style="color:#facc15">● READY</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#8ea0c8;margin-top:5px"><span>A5 Fuel Thrust</span><span>{thrust*100:.0f}%</span></div>
+        <div style="margin-top:8px;height:6px;background:#1a233f;border-radius:999px;overflow:hidden"><div style="width:{thrust/1.5*100:.0f}%;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div></div>
+      </div>
+    </div>
+    ''', unsafe_allow_html=True)
